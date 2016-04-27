@@ -12,11 +12,18 @@ MapRateCard <- function(mergedOMSData, rateCardFilePath) {
   flog.info(paste("Function", functionName, "started"), name = reportName)
   
   output <- tryCatch({
+#     
+#     wb <- loadWorkbook(file.path(rateCardFilePath,"destination_tree.csv"))  
+#     destinationTree <- readWorksheet(object = wb, sheet = 1)
+#     wb <- loadWorkbook(file.path(rateCardFilePath,"correct_destination.csv"))  
+#     destinationCorrect <- readWorksheet(object = wb, sheet = 1)
+    destinationTree <- read.csv(file.path(rateCardFilePath,"destination_tree.csv"), quote = '"', sep = ",", row.names = NULL ,
+                                col.names = c("destination", "id_region", "id_region_eco"),
+                                colClasses = c("character", "numeric", "numeric"))
+    destinationCorrect <- read.csv(file.path(rateCardFilePath,"correct_destination.csv"),quote = '"', sep = ",", row.names = NULL ,
+                                   col.names = c("destination_3pl", "destination_rev"),
+                                   colClasses = c("character", "character"))
     
-    wb <- loadWorkbook(file.path(rateCardFilePath,"destination_tree.xlsx"))  
-    destinationTree <- readWorksheet(object = wb, sheet = 1)
-    wb <- loadWorkbook(file.path(rateCardFilePath,"correct_destination.xlsx"))  
-    destinationCorrect <- readWorksheet(object = wb, sheet = 1)
     region_matrix <- read.csv(file.path(rateCardFilePath,"region_matrix.csv"), quote = '"', sep=",", row.names = NULL,
                          col.names = c("type", "from", "to", "region", "shippingFeeAdjust" ), 
                          colClasses = c("character", "numeric","numeric", "character", "numeric"))
@@ -58,6 +65,7 @@ MapRateCard <- function(mergedOMSData, rateCardFilePath) {
                                ifelse(codAmount < 300000, "cod150300", "cod300999")),
                                "noneco"))
     mergedOMSDataRev <- left_join(mergedOMSDataRev, destinationCorrectRev, by = c("destination_branch" = "destination_3pl"))
+    mergedOMSDataRev %<>% mutate(destination_branch = ifelse(is.na(destination_rev), destination_branch, destination_rev))
     mappedRateCard <- left_join(mergedOMSDataRev, 
                                 destinationTreeRev,
                                 by = c("origin_branch" = "destination"))
@@ -67,7 +75,7 @@ MapRateCard <- function(mergedOMSData, rateCardFilePath) {
     
     mappedRateCard <- left_join(mappedRateCard, 
                                 destinationTreeRev,
-                                by = c("destination_rev" = "destination")) # "level_2_name" = "destination"
+                                by = c("destination_branch" = "destination")) # "level_2_name" = "destination"
     mappedRateCard %<>% 
       mutate(id_destination = ifelse(rateType == "ECONOMY", id_region_eco, id_region)) %>%
       select(-c(id_region, id_region_eco))
@@ -124,7 +132,7 @@ MapRateCard <- function(mergedOMSData, rateCardFilePath) {
     
     mappedRateCard %<>% 
       mutate(total_carrying_fee_laz = carrying_fee_laz + fuel_sur_laz + rural_sur_laz + super_rural_laz + bulky_sur_laz) %>%
-      select(-c(bulky_sur, fuel_sur, rural_sur_rate, rural_sur_500999, super_rural, VUN, cross_checking, pick_up_at_address, failed_delivery_fee))
+      select(-c(bulky_sur, fuel_sur, rural_sur_rate, rural_sur_500999, super_rural, VUN, cross_checking, pickup_sur, failed_delivery_fee))
     
   }, error = function(err) {
     flog.error(paste(functionName, err, sep = " - "), name = reportName)

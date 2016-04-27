@@ -63,7 +63,7 @@ tryCatch({
   flog.info("Done Invoice Calculation", name = reportName)
   
   mergedOMSData_final <- mergedOMSData_rate %>%
-    select(-c(level_4_code, level_4_customer_address_region_type, level_4_fk_customer_address_region,
+    select(-c( #level_4_code, level_4_customer_address_region_type, level_4_fk_customer_address_region,
               level_3_code, level_3_customer_address_region_type, level_3_fk_customer_address_region,
               level_2_code, level_2_customer_address_region_type, level_2_fk_customer_address_region))
   save(mergedOMSData_final, file = "03_Script/03_RData/HCMP/mergedOMSData_final.RData",
