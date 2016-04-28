@@ -74,7 +74,7 @@ tryCatch({
   for (iFile in invoiceFiles) {
     fileName <- gsub(".xls.*$", "_checked.csv", iFile)
     fileData <-  as.data.frame(mergedOMSData_final %>% filter(rawFile == iFile))
-    write.csv2(fileData, file.path("02_Output/HCMP", fileName),
+    write.csv(fileData, file.path("02_Output/HCMP", fileName),
                row.names = FALSE)
   }
   
